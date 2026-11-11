@@ -20,12 +20,16 @@ jobs:
       - name: Installer les dépendances
         run: npm ci
       - name: Copier le jeu dans le projet Android
-        run: npx cap sync android
+        run: |
+          npx cap sync android > sync.log 2>&1 || { echo "::error::$(tail -c 1500 sync.log | tr '\n' ' ')"; exit 1; }
+          cat sync.log
       - name: Vérifier le SDK Android
         run: echo "ANDROID_HOME=$ANDROID_HOME" && ls "$ANDROID_HOME"
       - name: Compiler l'APK
         working-directory: android
-        run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon > build.log 2>&1 || { echo "::error::$(grep -E 'error|FAILURE|What went wrong' -A3 build.log | head -c 1800 | tr '\n' ' ')"; exit 1; }
       - name: Renommer
         run: cp android/app/build/outputs/apk/debug/app-debug.apk White-Picket.apk
       - uses: actions/upload-artifact@v4
