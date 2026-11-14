@@ -83,8 +83,7 @@ const MODELS = {
   chair:    { re: /(^|_)(dining_)?chair(_\d+)?$/i, not: /arm|rocking|office|high|sofa|bar|wheel|garden|plastic|stool|set|table|outdoor|lounge|century|deck|folding|camp|beach/i, max: 30000 },
   shelf:    { re: /book_?(shelf|case)|shelf/i, not: /wall_shelf|spice/i, max: 60000 },
   bed:      { re: /(^|_)bed($|_)/i, not: /bedside|flower/i, max: 80000 },
-  plant:    { re: /potted|houseplant|pot_?plant/i, max: 40000 },
-  tree:     { re: /(^|_)(tree|fir|pine|oak|birch|maple)(_|$)/i, not: /stump|log|branch|root|treehouse|dead|rat|street|bark|leaf/i, max: 45000 }
+  plant:    { re: /potted|houseplant|pot_?plant/i, max: 40000 }
 };
 function findGltf(files) {
   const g = files.gltf; if (!g) return null;
