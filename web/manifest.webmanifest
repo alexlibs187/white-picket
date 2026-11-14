@@ -1,0 +1,18 @@
+{
+  "name": "White Picket — Les secrets de l’Impasse des Cèdres",
+  "short_name": "White Picket",
+  "description": "Jeu d’enquête en 3D : une voisine a disparu, tout le monde sait quelque chose.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#140c2b",
+  "theme_color": "#2a1a55",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

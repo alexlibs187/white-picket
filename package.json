@@ -1,0 +1,15 @@
+{
+  "name": "white-picket",
+  "version": "1.0.0",
+  "description": "White Picket — jeu d’enquête en 3D (version publiée)",
+  "author": "Alexis Libouban",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@capacitor/android": "^7.6.10",
+    "@capacitor/cli": "^7.6.10",
+    "@capacitor/core": "^7.6.10",
+    "@capacitor/splash-screen": "^7.0.5",
+    "@capacitor/status-bar": "^7.0.6"
+  }
+}
