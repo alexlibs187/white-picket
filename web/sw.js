@@ -1,5 +1,5 @@
 // White Picket — service worker : jeu jouable hors ligne après la première visite.
-const CACHE = 'white-picket-v5';
+const CACHE = 'white-picket-v6';
 const ASSETS = ['./', './index.html', './game.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png',
   './fonts/lilita-one-latin-400-normal.woff2', './fonts/fredoka-latin-400-normal.woff2', './fonts/fredoka-latin-500-normal.woff2',

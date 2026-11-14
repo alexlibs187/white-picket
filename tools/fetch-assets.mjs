@@ -74,50 +74,48 @@ try {
   if (r) { const u = pickUrl(urls(r.files), /_1k\.hdr$/i); if (u) { manifest.hdri = await save(u, 'sky_1k.hdr'); manifest.hdriId = r.id; console.log(`+ hdri: ${r.id}`); } }
 } catch (err) { console.log(`! hdri: ${err.message}`); }
 
-// ---------- 3D models (CC0) ----------
+// ---------- 3D models: Poly Haven (CC0) + Khronos glTF sample assets (CC0 / CC BY 4.0) ----------
+// slot or slot@house -> source. The game falls back to slot when slot@house is absent.
 const MODELS = {
-  sofa:     { re: /sofa|couch/i, max: 80000 },
-  armchair: { re: /arm_?chair/i, max: 60000 },
-  coffee:   { re: /coffee_?table/i, max: 40000 },
-  table:    { re: /table/i, not: /coffee|side|bedside|night|desk|tennis|pool|picnic|garden/i, max: 50000 },
-  chair:    { re: /(^|_)(dining_)?chair(_\d+)?$/i, not: /arm|rocking|office|high|sofa|bar|wheel|garden|plastic|stool|set|table|outdoor|lounge|century|deck|folding|camp|beach/i, max: 30000 },
-  shelf:    { re: /book_?(shelf|case)|shelf/i, not: /wall_shelf|spice/i, max: 60000 },
-  bed:      { re: /(^|_)bed($|_)/i, not: /bedside|flower/i, max: 80000 },
-  plant:    { re: /potted|houseplant|pot_?plant/i, max: 40000 }
+  sofa: { ph: 'sofa_02' }, 'sofa@0': { ph: 'sofa_02' }, 'sofa@1': { ph: 'Sofa_01' }, 'sofa@3': { ph: 'sofa_03' }, 'sofa@4': { khr: 'GlamVelvetSofa' },
+  armchair: { ph: 'modern_arm_chair_01' }, 'armchair@1': { ph: 'ArmChair_01' }, 'armchair@3': { ph: 'ArmChair_01' }, 'armchair@4': { khr: 'SheenChair' },
+  coffee: { ph: 'coffee_table_round_01' }, 'coffee@3': { ph: 'CoffeeTable_01' },
+  table: { ph: 'wooden_table_02' }, chair: { ph: 'painted_wooden_chair_01' }, 'chair@3': { ph: 'dining_chair_02' },
+  shelf: { ph: 'Shelf_01' }, bed: { ph: 'vintage_day_bed' }, plant: { ph: 'potted_plant_04' }, 'plant@1': { ph: 'potted_plant_02' }, 'plant@4': { khr: 'DiffuseTransmissionPlant' },
+  chandelier: { ph: 'Chandelier_02' }, 'chandelier@3': { ph: 'Chandelier_01' },
+  vaseflowers: { khr: 'GlassVaseFlowers' }, vase: { ph: 'antique_ceramic_vase_01' }, 'vase@4': { ph: 'ceramic_vase_01' },
+  frame: { ph: 'fancy_picture_frame_01' }, 'frame@3': { ph: 'fancy_picture_frame_02' },
+  clock: { ph: 'mantel_clock_01' }, lantern: { ph: 'Lantern_01' }, pendant: { ph: 'modern_ceiling_lamp_01' },
+  tablelamp: { khr: 'IridescenceLamp' }, pouf: { khr: 'SpecularSilkPouf' }, nightstand: { ph: 'ClassicNightstand_01' }
 };
+const KHR = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/';
 function findGltf(files) {
   const g = files.gltf; if (!g) return null;
   const res = g['1k'] || g['2k'] || Object.values(g)[0]; if (!res) return null;
   return res.gltf || Object.values(res)[0];
 }
-try {
-  const list = await json(`${API}/assets?type=models`);
-  const entries = Object.entries(list).sort((a, b) => (b[1].download_count || 0) - (a[1].download_count || 0));
-  manifest.models = {};
-  await mkdir(new URL('models/', OUT), { recursive: true });
-  for (const [slot, def] of Object.entries(MODELS)) {
-    let done = false;
-    for (const [id, a] of entries) {
-      if (done) break;
-      const hay = id;
-      if (!def.re.test(hay) || (def.not && def.not.test(hay))) continue;
-      const poly = a.polycount || 0;
-      if (poly && poly > def.max) continue;
-      try {
-        const files = await json(`${API}/files/${id}`); const g = findGltf(files); if (!g || !g.url) continue;
-        const dir = `models/${slot}/`; await mkdir(new URL(dir, OUT), { recursive: true });
-        const name = g.url.split('/').pop();
-        await save(g.url, dir + name);
-        for (const [rel, f] of Object.entries(g.include || {})) {
-          const sub = new URL(dir + rel, OUT); await mkdir(new URL('.', sub), { recursive: true });
-          await writeFile(sub, Buffer.from(await (await get(f.url)).arrayBuffer()));
-        }
-        manifest.models[slot] = { id, gltf: 'assets/' + dir + name, polycount: poly };
-        console.log(`+ model ${slot}: ${id} (${poly} polys)`); done = true;
-      } catch (err) { console.log(`! model ${slot} ${id}: ${err.message}`); }
+manifest.models = {}; manifest.credits = [];
+const cache = {};
+await mkdir(new URL('models/', OUT), { recursive: true });
+for (const [slot, def] of Object.entries(MODELS)) {
+  const key = def.ph ? 'ph:' + def.ph : 'khr:' + def.khr;
+  try {
+    if (!cache[key]) {
+      const dir = `models/${(def.ph || def.khr).toLowerCase()}/`; await mkdir(new URL(dir, OUT), { recursive: true });
+      if (def.ph) {
+        const files = await json(`${API}/files/${def.ph}`), info = await json(`${API}/info/${def.ph}`); const g = findGltf(files); if (!g) throw new Error('pas de glTF');
+        const name = g.url.split('/').pop(); await save(g.url, dir + name);
+        for (const [rel, f] of Object.entries(g.include || {})) { const sub = new URL(dir + rel, OUT); await mkdir(new URL('.', sub), { recursive: true }); await writeFile(sub, Buffer.from(await (await get(f.url)).arrayBuffer())); }
+        cache[key] = { id: def.ph, gltf: 'assets/' + dir + name, polycount: info.polycount || 0 };
+        manifest.credits.push({ what: info.name || def.ph, authors: Object.keys(info.authors || {}).join(', '), license: 'CC0', src: 'Poly Haven', url: `https://polyhaven.com/a/${def.ph}` });
+      } else {
+        const meta = await json(`${KHR}${def.khr}/metadata.json`); const name = def.khr + '.glb'; await save(`${KHR}${def.khr}/glTF-Binary/${name}`, dir + name);
+        cache[key] = { id: def.khr, gltf: 'assets/' + dir + name };
+        for (const l of meta.legal || []) manifest.credits.push({ what: `${def.khr} (${l.what || ''})`, authors: [l.artist, l.owner].filter(x => x && x !== 'Public' && x !== 'Public domain').join(' / '), license: (l.license || '').replace('-1.0', '').replace('-4.0', ' 4.0'), src: 'Khronos glTF Sample Assets', url: `https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/${def.khr}` });
+      }
     }
-    if (!done) console.log(`- model ${slot}: aucun`);
-  }
-} catch (err) { console.log(`! models: ${err.message}`); }
+    manifest.models[slot] = cache[key]; console.log(`+ model ${slot}: ${cache[key].id}`);
+  } catch (err) { console.log(`! model ${slot}: ${err.message}`); }
+}
 await writeFile(new URL('manifest.json', OUT), JSON.stringify(manifest, null, 2));
 console.log(`Manifest: ${Object.keys(manifest.textures).length} textures, ${Object.keys(manifest.models || {}).length} modèles, hdri: ${manifest.hdri ? 'oui' : 'non'}`);
