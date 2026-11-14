@@ -11,7 +11,6 @@ White Picket © 2026 Alexis Libouban — tous droits réservés.
 ## Son
 
 - Musiques : compositions originales créées pour White Picket.
-- Voix off de l'introduction : synthèse vocale [Piper](https://github.com/rhasspy/piper), modèle fr_FR-siwis-medium — données [SIWIS French Speech Synthesis Database](https://datashare.is.ed.ac.uk/handle/10283/2353), licence CC BY 4.0.
 
 ## Modèles 3D
 
