@@ -193,7 +193,7 @@ body.touch #hint{display:none}
 <script type="module" src="game.js"></script>
 
 <script>
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) { addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); }); }
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) { addEventListener('load', () => { navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(r => r.update && r.update()).catch(() => {}); }); { const had = !!navigator.serviceWorker.controller; let rl = false; navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !rl) { rl = true; location.reload(); } }); } }
 </script>
 </body>
 </html>

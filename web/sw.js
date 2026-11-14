@@ -1,5 +1,5 @@
 // White Picket — service worker : jeu jouable hors ligne après la première visite.
-const CACHE = 'white-picket-v20';
+const CACHE = 'white-picket-v21';
 const ASSETS = ['./', './index.html', './game.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png',
   './fonts/lilita-one-latin-400-normal.woff2', './fonts/fredoka-latin-400-normal.woff2', './fonts/fredoka-latin-500-normal.woff2',
@@ -8,8 +8,13 @@ self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c =>
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  e.respondWith(caches.match(e.request, { ignoreSearch: true }).then(hit => hit || fetch(e.request).then(res => {
-    if (res.ok && new URL(e.request.url).origin === location.origin) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); }
-    return res;
-  }).catch(() => caches.match('./index.html'))));
+  const url = new URL(e.request.url), same = url.origin === location.origin;
+  const put = res => { if (res.ok && same) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); } return res; };
+  // code & page: network first (updates arrive on the next reload), cache only when offline
+  if (same && (e.request.mode === 'navigate' || /\.(js|html|json|webmanifest)$/.test(url.pathname) || url.pathname.endsWith('/'))) {
+    e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(put).catch(() => caches.match(e.request, { ignoreSearch: true }).then(hit => hit || caches.match('./index.html'))));
+    return;
+  }
+  // heavy assets (models, textures, audio): cache first
+  e.respondWith(caches.match(e.request, { ignoreSearch: true }).then(hit => hit || fetch(e.request).then(put).catch(() => caches.match('./index.html'))));
 });
